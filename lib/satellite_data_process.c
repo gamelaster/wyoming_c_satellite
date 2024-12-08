@@ -14,17 +14,6 @@ enum process_state {
     PROCESS_STATE_PAYLOAD
 };
 
-void packet_destroy(struct packet pkt) {
-  if (pkt.header != NULL) cJSON_Delete(pkt.header);
-  if (pkt.data != NULL) cJSON_Delete(pkt.data);
-  if (pkt.payload != NULL) free(pkt.payload);
-}
-
-void on_packet(struct packet pkt)
-{
-  packet_destroy(pkt);
-}
-
 void wsat_process_data()
 {
   struct wsat_inst_priv* inst = &wsat_priv;
@@ -34,7 +23,7 @@ void wsat_process_data()
 
   static uint32_t payload_length = 0;
   static uint32_t add_data_length = 0;
-  static struct packet pkt;
+  static struct wsat_packet pkt;
 
   while (inst->data_buf_avail_bytes != 0 && (data_size = inst->data_buf_avail_bytes - offset) > 0) {
     uint8_t* data = inst->data_buf + offset;
@@ -73,7 +62,7 @@ void wsat_process_data()
           goto header_found;
         }
       }
-      // We did not find the new line. This should not happen if really whole packet was sent
+      // We did not find the new line. This should not happen if really whole wsat_packet was sent
       // (due nature of TCP), but anyway, let's handle it.
       // Also, if we already have more than 4096 bytes, and no header, let's scrap the data
       if (data_size > 4096) {
@@ -126,7 +115,7 @@ header_found:
       } else if (payload_length != 0) {
         state = PROCESS_STATE_PAYLOAD;
       } else {
-        on_packet(pkt);
+        wsat_handle_packet(pkt);
       }
       offset += header_length;
     } else if (state == PROCESS_STATE_DATA) {
@@ -138,7 +127,7 @@ header_found:
         // This is not JSON, so let's scrap everything
         inst->data_buf_avail_bytes = 0;
         offset = 0;
-        packet_destroy(pkt);
+        wsat_packet_free(pkt, true);
         state = PROCESS_STATE_HEADER;
         break;
       }
@@ -149,7 +138,7 @@ header_found:
         // If only part of the JSON is parsed, that means something is definitely wrong.
         inst->data_buf_avail_bytes = 0;
         offset = 0;
-        packet_destroy(pkt);
+        wsat_packet_free(pkt, true);
         state = PROCESS_STATE_HEADER;
         break;
       }
@@ -157,7 +146,7 @@ header_found:
       if (payload_length != 0) {
         state = PROCESS_STATE_PAYLOAD;
       } else {
-        on_packet(pkt);
+        wsat_handle_packet(pkt);
         state = PROCESS_STATE_HEADER;
       }
       offset += add_data_length;
@@ -169,7 +158,7 @@ header_found:
       pkt.payload_length = payload_length;
       pkt.payload = malloc(payload_length);
       memcpy(pkt.payload, data, payload_length);
-      on_packet(pkt);
+      wsat_handle_packet(pkt);
       state = PROCESS_STATE_HEADER;
       offset += payload_length;
     }

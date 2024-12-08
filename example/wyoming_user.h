@@ -16,6 +16,7 @@ void debug_print(char type, const char *format, ...);
 
 #define LOGD(...) debug_print('D', __VA_ARGS__)
 #define LOGE(...) debug_print('E', __VA_ARGS__)
+#define LOGI(...) debug_print('I', __VA_ARGS__)
 
 // Platform related macros
 

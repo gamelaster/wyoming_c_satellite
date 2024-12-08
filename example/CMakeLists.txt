@@ -8,7 +8,8 @@ find_package(PkgConfig REQUIRED)
 
 target_sources(wyoming_c_satellite PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_data_process.c)
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_data_process.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_packet_handle.c)
 
 
 target_include_directories(wyoming_c_satellite PUBLIC
