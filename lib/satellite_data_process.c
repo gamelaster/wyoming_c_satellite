@@ -8,10 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-enum process_state {
-    PROCESS_STATE_HEADER,
-    PROCESS_STATE_DATA,
-    PROCESS_STATE_PAYLOAD
+enum process_state
+{
+  PROCESS_STATE_HEADER,
+  PROCESS_STATE_DATA,
+  PROCESS_STATE_PAYLOAD
 };
 
 void wsat_process_data()
@@ -115,7 +116,7 @@ header_found:
       } else if (payload_length != 0) {
         state = PROCESS_STATE_PAYLOAD;
       } else {
-        wsat_handle_packet(pkt);
+        wsat_packet_handle(pkt);
       }
       offset += header_length;
     } else if (state == PROCESS_STATE_DATA) {
@@ -146,7 +147,7 @@ header_found:
       if (payload_length != 0) {
         state = PROCESS_STATE_PAYLOAD;
       } else {
-        wsat_handle_packet(pkt);
+        wsat_packet_handle(pkt);
         state = PROCESS_STATE_HEADER;
       }
       offset += add_data_length;
@@ -158,7 +159,7 @@ header_found:
       pkt.payload_length = payload_length;
       pkt.payload = malloc(payload_length);
       memcpy(pkt.payload, data, payload_length);
-      wsat_handle_packet(pkt);
+      wsat_packet_handle(pkt);
       state = PROCESS_STATE_HEADER;
       offset += payload_length;
     }

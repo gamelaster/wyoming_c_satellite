@@ -24,6 +24,13 @@ int32_t wsat_run()
   int port, client_len;
   struct sockaddr_in serv_addr, client_addr;
 
+  inst->mode = &wsat_mode_always_stream; // TODO:
+  if (inst->mode->init_fn() < 0) {
+    LOGE("Failed to initialize mode");
+    ret = -5;
+    goto cleanup;
+  }
+
   inst->connfd = inst->sockfd = -1;
 
   inst->sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -39,8 +46,15 @@ int32_t wsat_run()
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   serv_addr.sin_port = htons(port);
 
+  const int enable = 1;
+  if (setsockopt(inst->sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0) {
+    LOGE("setsockopt(SO_REUSEADDR) failed");
+    ret = -1;
+    goto cleanup;
+  }
+
   if (bind(inst->sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-    LOGE("Error on binding");
+    LOGE("Error on binding, err: %d", errno);
     ret = -2;
     goto cleanup;
   }
@@ -106,10 +120,12 @@ cleanup:
   if (inst->connfd >= 0) close(inst->connfd);
   if (inst->sockfd >= 0) close(inst->sockfd);
   inst->connfd = inst->sockfd = -1;
+  inst->mode->destroy_fn();
   return ret;
 }
 
-int32_t wsat_packet_send(struct wsat_packet pkt) {
+int32_t wsat_packet_send(struct wsat_packet pkt)
+{
   struct wsat_inst_priv* inst = &wsat_priv;
   int32_t ret = 0;
   ssize_t res;
@@ -164,4 +180,52 @@ void wsat_packet_free(struct wsat_packet pkt, bool free_payload)
   if (pkt.header != NULL) cJSON_Delete(pkt.header);
   if (pkt.data != NULL) cJSON_Delete(pkt.data);
   if (free_payload && pkt.payload != NULL) free(pkt.payload);
+}
+
+void wsat_set_microphone(struct wsat_microphone* mic)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  inst->mic = mic;
+}
+
+int32_t wsat_send_run_pipeline(const char* pipeline_name)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  const char* start_stage, * end_stage;
+  bool restart_on_end = false;
+
+  if (inst->mode->type == WSAT_MODE_WAKE_STREAM) {
+    // Local wake word detection
+    start_stage = "asr";
+    restart_on_end = false;
+  } else {
+    // Remote wake word detection
+    start_stage = "wake";
+    restart_on_end = true; // TODO: VAD
+  }
+
+  if (inst->snd != NULL) {
+    // When we have speaker available, play TTS response
+    end_stage = "tts";
+  } else {
+    end_stage = "handle";
+  }
+
+  cJSON* header = cJSON_CreateObject();
+  cJSON_AddStringToObject(header, "type", "run-pipeline");
+  cJSON_AddStringToObject(header, "version", "1.5.2");
+
+  cJSON* data = cJSON_CreateObject();
+  if (pipeline_name != NULL) cJSON_AddStringToObject(data, "name", pipeline_name);
+  cJSON_AddStringToObject(data, "start_stage", start_stage);
+  cJSON_AddStringToObject(data, "end_stage", end_stage);
+  cJSON_AddBoolToObject(data, "restart_on_end", restart_on_end);
+
+  struct wsat_packet res_pkt = {
+    .header = header,
+    .data = data
+  };
+  wsat_packet_send(res_pkt);
+  wsat_packet_free(res_pkt, true);
+  return 0;
 }
