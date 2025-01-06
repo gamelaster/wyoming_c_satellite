@@ -8,6 +8,8 @@
  */
 
 #include "satellite_priv.h"
+#include "wyoming/satellite.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -30,6 +32,8 @@ int32_t wsat_run()
     ret = -5;
     goto cleanup;
   }
+
+  // TODO: Call microphone init & destroy
 
   inst->connfd = inst->sockfd = -1;
 
@@ -182,10 +186,38 @@ void wsat_packet_free(struct wsat_packet pkt, bool free_payload)
   if (free_payload && pkt.payload != NULL) free(pkt.payload);
 }
 
-void wsat_set_microphone(struct wsat_microphone* mic)
+void wsat_mic_set(struct wsat_microphone* mic)
 {
   struct wsat_inst_priv* inst = &wsat_priv;
   inst->mic = mic;
+}
+
+void wsat_mic_write_data(uint8_t* data, uint32_t length)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  PLAT_MUTEX_LOCK(&inst->is_streaming_mutex);
+  bool is_streaming = inst->is_streaming;
+  PLAT_MUTEX_UNLOCK(&inst->is_streaming_mutex);
+  if (!is_streaming) return;
+
+  cJSON* header = cJSON_CreateObject();
+  cJSON_AddStringToObject(header, "type", "audio-chunk");
+  cJSON_AddStringToObject(header, "version", "1.5.2");
+
+  cJSON* pkt_data = cJSON_CreateObject();
+  cJSON_AddNumberToObject(pkt_data, "rate", inst->mic->rate);
+  cJSON_AddNumberToObject(pkt_data, "width", inst->mic->width);
+  cJSON_AddNumberToObject(pkt_data, "channels", inst->mic->channels);
+  cJSON_AddNumberToObject(pkt_data, "timestamp", 4407203886274); // TODO:
+
+  struct wsat_packet res_pkt = {
+    .header = header,
+    .data = pkt_data,
+    .payload = data,
+    .payload_length = length
+  };
+  wsat_packet_send(res_pkt);
+  wsat_packet_free(res_pkt, false);
 }
 
 int32_t wsat_send_run_pipeline(const char* pipeline_name)

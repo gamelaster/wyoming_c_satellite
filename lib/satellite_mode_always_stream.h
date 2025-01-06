@@ -10,8 +10,7 @@
 
 struct wsat_mode_always_stream_inst
 {
-  bool is_streaming;
-  PLAT_MUTEX_TYPE is_streaming_mutex;
+
 };
 
 #endif

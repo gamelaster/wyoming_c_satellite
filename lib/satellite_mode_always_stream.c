@@ -11,19 +11,30 @@ static int32_t wsat_mode_packet_handle(enum wsat_packet_type packet_type, struct
   int32_t res = wsat_packet_default_handle(packet_type, pkt);
   switch (packet_type) {
     case WSAT_EVENT_TYPE_RUN_SATELLITE: {
-      PLAT_MUTEX_LOCK(&mode_inst->is_streaming_mutex);
-      mode_inst->is_streaming = true;
-      PLAT_MUTEX_UNLOCK(&mode_inst->is_streaming_mutex);
+      PLAT_MUTEX_LOCK(&inst->is_streaming_mutex);
+      inst->is_streaming = true;
+      PLAT_MUTEX_UNLOCK(&inst->is_streaming_mutex);
       wsat_send_run_pipeline(NULL);
-      if (inst->mic->start_stream_fn != NULL) {
+      if (inst->mic && inst->mic->start_stream_fn) {
         inst->mic->start_stream_fn();
       }
+      res = 1;
+      break;
+    }
+    case WSAT_EVENT_TYPE_VOICE_STOPPED: {
+      // This is a difference between Python Wyoming. We stop mic stream after STT ends,
+      // so we don't stream TTS answer playback back to server for STT.
+      if (inst->mic && inst->mic->stop_stream_fn) {
+        inst->mic->stop_stream_fn();
+      }
+      res = 1;
       break;
     }
     case WSAT_EVENT_TYPE_PAUSE_SATELLITE: {
-      PLAT_MUTEX_LOCK(&mode_inst->is_streaming_mutex);
-      mode_inst->is_streaming = false;
-      PLAT_MUTEX_UNLOCK(&mode_inst->is_streaming_mutex);
+      PLAT_MUTEX_LOCK(&inst->is_streaming_mutex);
+      inst->is_streaming = false;
+      PLAT_MUTEX_UNLOCK(&inst->is_streaming_mutex);
+      res = 1;
     }
     default:
       break;
@@ -35,7 +46,7 @@ static int32_t wsat_mode_init()
 {
   struct wsat_inst_priv* inst = &wsat_priv;
   struct wsat_mode_always_stream_inst* mode_inst = &inst->mode_inst.always_stream;
-  if (PLAT_MUTEX_CREATE(&mode_inst->is_streaming_mutex) != 0) {
+  if (PLAT_MUTEX_CREATE(&inst->is_streaming_mutex) != 0) {
     LOGD("Failed to initialize mutex");
     return -1;
   }
@@ -46,7 +57,7 @@ static int32_t wsat_mode_destroy()
 {
   struct wsat_inst_priv* inst = &wsat_priv;
   struct wsat_mode_always_stream_inst* mode_inst = &inst->mode_inst.always_stream;
-  PLAT_MUTEX_DESTROY(&mode_inst->is_streaming_mutex);
+  PLAT_MUTEX_DESTROY(&inst->is_streaming_mutex);
   return 0;
 }
 

@@ -25,6 +25,7 @@ enum wsat_packet_type
   WSAT_EVENT_TYPE_DESCRIBE,
   WSAT_EVENT_TYPE_RUN_SATELLITE,
   WSAT_EVENT_TYPE_PAUSE_SATELLITE,
+  WSAT_EVENT_TYPE_VOICE_STOPPED,
 };
 
 struct wsat_mode_if
@@ -50,6 +51,9 @@ struct wsat_inst_priv
   {
     struct wsat_mode_always_stream_inst always_stream;
   } mode_inst;
+
+  bool is_streaming;
+  PLAT_MUTEX_TYPE is_streaming_mutex;
 
   struct wsat_microphone* mic;
   void* snd;

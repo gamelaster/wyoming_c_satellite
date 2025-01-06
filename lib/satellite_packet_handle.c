@@ -58,6 +58,7 @@ struct packet_type_map_entry
   { "describe",        WSAT_EVENT_TYPE_DESCRIBE },
   { "run-satellite",   WSAT_EVENT_TYPE_RUN_SATELLITE },
   { "pause-satellite", WSAT_EVENT_TYPE_PAUSE_SATELLITE },
+  { "voice-stopped",   WSAT_EVENT_TYPE_VOICE_STOPPED },
 };
 
 struct packet_handler
