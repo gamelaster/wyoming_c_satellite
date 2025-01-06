@@ -50,6 +50,38 @@ static int32_t handle_describe(struct wsat_packet pkt)
   return 0;
 }
 
+static int32_t handle_audio_start(struct wsat_packet pkt)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  if (pkt.data != NULL) {
+    uint32_t rate = (uint32_t)cJSON_GetNumberValue(cJSON_GetObjectItem(pkt.data, "rate"));
+    uint8_t width = (uint8_t)cJSON_GetNumberValue(cJSON_GetObjectItem(pkt.data, "width"));
+    uint8_t channels = (uint8_t)cJSON_GetNumberValue(cJSON_GetObjectItem(pkt.data, "channels"));
+    if (inst->snd != NULL && inst->snd->start_stream_fn != NULL) {
+      inst->snd->start_stream_fn(rate, width, channels);
+    }
+  }
+  return 0;
+}
+
+static int32_t handle_audio_chunk(struct wsat_packet pkt)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  if (inst->snd != NULL && inst->snd->on_data_fn != NULL) {
+    inst->snd->on_data_fn(pkt.payload, pkt.payload_length);
+  }
+  return 0;
+}
+
+static int32_t handle_audio_stop(struct wsat_packet pkt)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  if (inst->snd != NULL && inst->snd->stop_stream_fn != NULL) {
+    inst->snd->stop_stream_fn();
+  }
+  return 0;
+}
+
 struct packet_type_map_entry
 {
   const char* type_str;
@@ -58,7 +90,9 @@ struct packet_type_map_entry
   { "describe",        WSAT_EVENT_TYPE_DESCRIBE },
   { "run-satellite",   WSAT_EVENT_TYPE_RUN_SATELLITE },
   { "pause-satellite", WSAT_EVENT_TYPE_PAUSE_SATELLITE },
-  { "voice-stopped",   WSAT_EVENT_TYPE_VOICE_STOPPED },
+  { "audio-start",     WSAT_EVENT_TYPE_AUDIO_START },
+  { "audio-chunk",     WSAT_EVENT_TYPE_AUDIO_CHUNK },
+  { "audio-stop",      WSAT_EVENT_TYPE_AUDIO_STOP },
 };
 
 struct packet_handler
@@ -66,7 +100,10 @@ struct packet_handler
   enum wsat_packet_type type;
   int32_t (* handler_fn)(struct wsat_packet);
 } static packet_handlers[] = {
-  { WSAT_EVENT_TYPE_DESCRIBE, handle_describe }
+  { WSAT_EVENT_TYPE_DESCRIBE,    handle_describe },
+  { WSAT_EVENT_TYPE_AUDIO_START, handle_audio_start },
+  { WSAT_EVENT_TYPE_AUDIO_CHUNK, handle_audio_chunk },
+  { WSAT_EVENT_TYPE_AUDIO_STOP,  handle_audio_stop }
 };
 
 

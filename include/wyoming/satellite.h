@@ -24,9 +24,19 @@ struct wsat_microphone
   int32_t (* stop_stream_fn)();
 };
 
+struct wsat_sound
+{
+  int32_t (* init_fn)();
+  int32_t (* destroy_fn)();
+  int32_t (* start_stream_fn)(uint32_t rate, uint8_t width, uint8_t channels);
+  int32_t (* on_data_fn)(uint8_t* data, uint32_t length);
+  int32_t (* stop_stream_fn)();
+};
 
 int32_t wsat_run();
+void wsat_stop();
 void wsat_mic_set(struct wsat_microphone* mic);
+void wsat_snd_set(struct wsat_sound* snd);
 void wsat_mic_write_data(uint8_t* data, uint32_t length);
 
 int32_t wsat_packet_send(struct wsat_packet pkt);

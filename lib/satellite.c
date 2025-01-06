@@ -25,15 +25,46 @@ int32_t wsat_run()
   int32_t ret = 0;
   int port, client_len;
   struct sockaddr_in serv_addr, client_addr;
-
   inst->mode = &wsat_mode_always_stream; // TODO:
-  if (inst->mode->init_fn() < 0) {
-    LOGE("Failed to initialize mode");
-    ret = -5;
-    goto cleanup;
+
+  struct component_entry
+  {
+    const char* name;
+    int32_t (* init_fn)();
+    int32_t (* destroy_fn)();
+  } components[] = {
+    {
+      "mode",
+      inst->mode->init_fn,
+      inst->mode->destroy_fn
+    },
+    {
+      "microphone",
+      inst->mic ? inst->mic->init_fn : NULL,
+      inst->mic ? inst->mic->destroy_fn : NULL,
+    },
+    {
+      "speaker",
+      inst->snd ? inst->snd->init_fn : NULL,
+      inst->snd ? inst->snd->destroy_fn : NULL,
+    }
+  };
+
+  for (int i = 0; i < 3; i++) {
+    struct component_entry cmp = components[i];
+    if (cmp.init_fn != NULL) {
+      if (cmp.init_fn() < 0) {
+        LOGE("Failed to initialize %s", cmp.name);
+        ret = -5;
+        goto cleanup;
+      }
+    }
   }
 
-  // TODO: Call microphone init & destroy
+  if (PLAT_MUTEX_CREATE(&inst->is_streaming_mutex) != 0) {
+    LOGD("Failed to initialize mutex");
+    return -1;
+  }
 
   inst->connfd = inst->sockfd = -1;
 
@@ -85,7 +116,7 @@ int32_t wsat_run()
     inst->connfd = accept(inst->sockfd, (struct sockaddr*)&client_addr, (socklen_t*)&client_len);
     if (inst->connfd < 0) {
       LOGE("Error on accept");
-      continue;
+      break;
     }
     LOGD("Client connected");
 
@@ -124,7 +155,13 @@ cleanup:
   if (inst->connfd >= 0) close(inst->connfd);
   if (inst->sockfd >= 0) close(inst->sockfd);
   inst->connfd = inst->sockfd = -1;
-  inst->mode->destroy_fn();
+  PLAT_MUTEX_DESTROY(&inst->is_streaming_mutex);
+  for (int i = 0; i < 3; i++) {
+    struct component_entry cmp = components[i];
+    if (cmp.destroy_fn != NULL) {
+      cmp.destroy_fn();
+    }
+  }
   return ret;
 }
 
@@ -166,7 +203,7 @@ int32_t wsat_packet_send(struct wsat_packet pkt)
   }
   if (pkt.payload != NULL) {
     res = send(inst->connfd, pkt.payload, pkt.payload_length, 0);
-    if (res != data_json_length) {
+    if (res != pkt.payload_length) {
       LOGE("Failed to send payload, err %d", errno);
       ret = -1;
       goto cleanup;
@@ -190,6 +227,12 @@ void wsat_mic_set(struct wsat_microphone* mic)
 {
   struct wsat_inst_priv* inst = &wsat_priv;
   inst->mic = mic;
+}
+
+void wsat_snd_set(struct wsat_sound* snd)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  inst->snd = snd;
 }
 
 void wsat_mic_write_data(uint8_t* data, uint32_t length)
@@ -218,6 +261,16 @@ void wsat_mic_write_data(uint8_t* data, uint32_t length)
   };
   wsat_packet_send(res_pkt);
   wsat_packet_free(res_pkt, false);
+}
+
+void wsat_stop()
+{
+  //struct wsat_inst_priv* inst = &wsat_priv;
+  //close(inst->sockfd);
+  //PLAT_MUTEX_LOCK(&inst->conn_mutex);
+  //if (inst->connfd != -1) close(inst->connfd);
+  //PLAT_MUTEX_UNLOCK(&inst->conn_mutex);
+
 }
 
 int32_t wsat_send_run_pipeline(const char* pipeline_name)
