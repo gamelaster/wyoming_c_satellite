@@ -148,6 +148,18 @@ int32_t wsat_run()
     }
     close(inst->connfd);
     inst->connfd = -1;
+
+    // Stop the streams on disconnect
+    if (inst->mic != NULL && inst->mic->stop_stream_fn != NULL) {
+      inst->mic->stop_stream_fn();
+    }
+    if (inst->snd != NULL && inst->snd->stop_stream_fn != NULL) {
+      inst->snd->stop_stream_fn();
+    }
+    // TODO: DO this differently
+    PLAT_MUTEX_LOCK(&inst->is_streaming_mutex);
+    inst->is_streaming = false;
+    PLAT_MUTEX_UNLOCK(&inst->is_streaming_mutex);
   }
 
 cleanup:
