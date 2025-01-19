@@ -46,8 +46,10 @@ static int32_t mic_start_stream()
 
 static int32_t mic_stop_stream()
 {
+  if (atomic_load(&mic_enabled)) {
+    pthread_join(mic_thread, NULL);
+  }
   atomic_store(&mic_enabled, 0);
-  pthread_join(mic_thread, NULL);
   return 0;
 }
 
@@ -78,7 +80,10 @@ static int32_t snd_start_stream(uint32_t rate, uint8_t width, uint8_t channels)
 
 static int32_t snd_stop_stream()
 {
-  fclose(snd_out_file);
+  if (snd_out_file != NULL) {
+    fclose(snd_out_file);
+  }
+  snd_out_file = NULL;
   return 0;
 }
 
