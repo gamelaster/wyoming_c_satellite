@@ -22,6 +22,8 @@ void wsat_process_data()
   uint32_t offset = 0;
   uint32_t data_size;
 
+  // TODO: Reset state after client is disconnected
+
   static uint32_t payload_length = 0;
   static uint32_t add_data_length = 0;
   static struct wsat_packet pkt;
@@ -85,10 +87,14 @@ header_found:
       // There is chance, that we receive {UNEXPECTED_JSON}{RELATED_JSON}\n . So we need to verify where parser
       // stopped and check if it's \n, and if not, scrap the unexpected json.
       if (parse_end_ptr[0] != '\n') {
-        offset += (uint8_t*)parse_end_ptr - data;
+        offset += (uint8_t*)parse_end_ptr - data + 1;
         cJSON_Delete(header);
         continue;
       }
+
+      // Sometimes, it can happen that we receive two headers in buffer, or date byte array which ends with }\n
+      header_length = (uint8_t*)parse_end_ptr - data + 1;
+
       // Check if we have mandatory field "type_field" and it's string
       cJSON* type_field = cJSON_GetObjectItem(header, "type");
       if (type_field == NULL || !cJSON_IsString(type_field)) {
