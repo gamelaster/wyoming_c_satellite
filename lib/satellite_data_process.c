@@ -104,7 +104,7 @@ header_found:
       pkt.payload = NULL;
       pkt.payload_length = 0;
 
-      printf("Found header: %.*s\n", header_length - 1, data);
+      LOGD("Found header: %.*s\n", header_length - 1, data);
 
       cJSON* add_data_length_field = cJSON_GetObjectItem(header, "data_length");
       cJSON* payload_length_field = cJSON_GetObjectItem(header, "payload_length");
