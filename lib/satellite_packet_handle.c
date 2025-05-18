@@ -82,6 +82,17 @@ static int32_t handle_audio_stop(struct wsat_packet pkt)
   return 0;
 }
 
+static int32_t handle_detection(struct wsat_packet pkt)
+{
+  return 0;
+}
+
+static int32_t handle_voice_stopped(struct wsat_packet pkt)
+{
+  return 0;
+}
+
+
 struct packet_type_map_entry
 {
   const char* type_str;
@@ -93,6 +104,8 @@ struct packet_type_map_entry
   { "audio-start",     WSAT_EVENT_TYPE_AUDIO_START },
   { "audio-chunk",     WSAT_EVENT_TYPE_AUDIO_CHUNK },
   { "audio-stop",      WSAT_EVENT_TYPE_AUDIO_STOP },
+  { "detection",       WSAT_EVENT_TYPE_DETECTION },
+  { "voice-stopped",   WSAT_EVENT_TYPE_VOICE_STOPPED }
 };
 
 struct packet_handler
@@ -100,10 +113,12 @@ struct packet_handler
   enum wsat_packet_type type;
   int32_t (* handler_fn)(struct wsat_packet);
 } static packet_handlers[] = {
-  { WSAT_EVENT_TYPE_DESCRIBE,    handle_describe },
-  { WSAT_EVENT_TYPE_AUDIO_START, handle_audio_start },
-  { WSAT_EVENT_TYPE_AUDIO_CHUNK, handle_audio_chunk },
-  { WSAT_EVENT_TYPE_AUDIO_STOP,  handle_audio_stop }
+  { WSAT_EVENT_TYPE_DESCRIBE,      handle_describe },
+  { WSAT_EVENT_TYPE_AUDIO_START,   handle_audio_start },
+  { WSAT_EVENT_TYPE_AUDIO_CHUNK,   handle_audio_chunk },
+  { WSAT_EVENT_TYPE_AUDIO_STOP,    handle_audio_stop },
+  { WSAT_EVENT_TYPE_DETECTION,     handle_detection },
+  { WSAT_EVENT_TYPE_VOICE_STOPPED, handle_voice_stopped }
 };
 
 

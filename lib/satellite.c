@@ -222,9 +222,9 @@ int32_t wsat_packet_send(struct wsat_packet pkt)
     }
   }
 cleanup:
+  PLAT_MUTEX_UNLOCK(&inst->conn_mutex);
   free(header_json);
   if (pkt.data != NULL) free(data_json);
-  PLAT_MUTEX_UNLOCK(&inst->conn_mutex);
   return ret;
 }
 
