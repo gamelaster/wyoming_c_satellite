@@ -174,8 +174,6 @@ static int32_t handle_error(struct wsat_decoded_event* evt)
   }
   LOGE("Satellite returned error: \"%s\" (%s)", error_str != NULL ? error_str : "-",
     error_code != NULL ? error_code : "-");
-  if (error_str != NULL) free(error_str);
-  if (error_code != NULL) free(error_code);
   return 0;
 }
 
