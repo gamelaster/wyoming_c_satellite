@@ -1,5 +1,3 @@
-set(CMAKE_C_STANDARD 17)
-
 add_executable(wyoming_c_satellite main.c)
 
 find_package(PkgConfig REQUIRED)
@@ -8,10 +6,13 @@ find_package(PkgConfig REQUIRED)
 
 target_sources(wyoming_c_satellite PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_data_process.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_packet_handle.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_mode_always_stream.c)
-
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_server.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_event_decoder.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_event_handler.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_component.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_mode_always_stream.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../lib/satellite_mode_wake_stream.c
+)
 
 target_include_directories(wyoming_c_satellite PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR} # So Wyoming library can include wyoming_user.h

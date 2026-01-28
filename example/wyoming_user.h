@@ -12,7 +12,7 @@
 
 // Logging implementation
 
-void debug_print(char type, const char *format, ...);
+void debug_print(char type, const char* format, ...);
 
 #define LOGD(...) debug_print('D', __VA_ARGS__)
 #define LOGE(...) debug_print('E', __VA_ARGS__)
@@ -26,9 +26,12 @@ void debug_print(char type, const char *format, ...);
 
 #define PLAT_MUTEX_TYPE pthread_mutex_t
 #define PLAT_MUTEX_CREATE(mutex) pthread_mutex_init(mutex, NULL)
+// WARNING: Mutex destroy can be called on non-created mutex.
 #define PLAT_MUTEX_DESTROY(mutex) pthread_mutex_destroy(mutex)
 #define PLAT_MUTEX_LOCK(mutex) pthread_mutex_lock(mutex)
 #define PLAT_MUTEX_UNLOCK(mutex) pthread_mutex_unlock(mutex)
+
+#define EVENT_DECODER_BUFFER_SIZE (4096)
 
 
 #endif

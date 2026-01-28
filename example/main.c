@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <string.h>
+#include "wyoming_user.h"
 
 // region Microphone test impl
 
@@ -16,12 +17,15 @@ static void* mic_thread_fn(void* opaque)
 {
   static uint8_t audio_buffer[2048];
   static FILE* audio_file = NULL;
-  memset(audio_buffer, 0x00, sizeof(audio_buffer));
   while (atomic_load(&mic_enabled)) {
     memset(audio_buffer, 0x0, sizeof(audio_buffer));
     if (atomic_load(&mic_play_audio)) {
       if (audio_file == NULL) {
+#if 1
+        audio_file = fopen("only-turn-on-light.raw", "rb");
+#else
         audio_file = fopen("test-turn-on-the-light.raw", "rb");
+#endif
       }
       size_t read_size = fread(audio_buffer, 1, 2048, audio_file);
       if (read_size <= 0) {
@@ -47,20 +51,23 @@ static int32_t mic_start_stream()
 static int32_t mic_stop_stream()
 {
   if (atomic_load(&mic_enabled)) {
+    atomic_store(&mic_enabled, 0);
     pthread_join(mic_thread, NULL);
   }
-  atomic_store(&mic_enabled, 0);
   return 0;
 }
 
 struct wsat_microphone mic = {
+  {
+    WSAT_COMPONENT_TYPE_MICROPHONE,
+    mic_start_stream,
+    mic_stop_stream,
+    NULL,
+    false,
+  },
   16000,
   2,
   1,
-  NULL,
-  NULL,
-  mic_start_stream,
-  mic_stop_stream
 };
 
 // endregion
@@ -69,37 +76,57 @@ struct wsat_microphone mic = {
 
 static FILE* snd_out_file = NULL;
 
-static int32_t snd_start_stream(uint32_t rate, uint8_t width, uint8_t channels)
+static int32_t snd_handle_sys_event(enum wsat_sys_event_type type, void* data)
 {
-  static uint32_t i = 0;
-  char snd_file_name[50];
-  snprintf(snd_file_name, sizeof(snd_file_name), "snd_%d_%d_%d_%d.bin", i++, rate, width, channels);
-  snd_out_file = fopen(snd_file_name, "wb");
-  return 0;
-}
-
-static int32_t snd_stop_stream()
-{
-  if (snd_out_file != NULL) {
-    fclose(snd_out_file);
+  switch (type) {
+  case WSAT_SYS_EVENT_SND_AUDIO_START: {
+    struct wsat_sys_event_audio_start_params* info = data;
+    static uint32_t i = 0;
+    char snd_file_name[50];
+    snprintf(snd_file_name, sizeof(snd_file_name), "snd_%d_%d_%d_%d.bin", i++,
+      info->rate, info->width, info->channels);
+    snd_out_file = fopen(snd_file_name, "wb");
+    break;
   }
-  snd_out_file = NULL;
-  return 0;
-}
-
-static int32_t snd_on_data(uint8_t* data, uint32_t length)
-{
-  fwrite(data, 1, length, snd_out_file);
-  return 0;
+  case WSAT_SYS_EVENT_SND_AUDIO_DATA: {
+    struct wsat_sys_event_buffer_params* buffer = data;
+    fwrite(buffer->data, 1, buffer->size, snd_out_file);
+    break;
+  }
+  case WSAT_SYS_EVENT_SND_AUDIO_END: {
+    if (snd_out_file != NULL) {
+      fclose(snd_out_file);
+    }
+    snd_out_file = NULL;
+  }
+  default: break;
+  }
 }
 
 static struct wsat_sound snd = {
-  NULL,
-  NULL,
-  snd_start_stream,
-  snd_on_data,
-  snd_stop_stream,
+  {
+    WSAT_COMPONENT_TYPE_SOUND,
+    NULL,
+    NULL,
+    snd_handle_sys_event,
+    true,
+  }
 };
+// endregion
+
+// region Wake test impl
+
+static struct wsat_wake wake = {
+  {
+    WSAT_COMPONENT_TYPE_WAKE,
+    NULL,
+    NULL,
+    NULL,
+    true,
+  },
+  "test",
+};
+
 // endregion
 
 void* terminal_thread_fn(void* opaque)
@@ -112,6 +139,8 @@ void* terminal_thread_fn(void* opaque)
       printf("Stopping the server\n");
       wsat_stop();
       break;
+    } else if (ch == 'w') {
+      wsat_wake_detection();
     }
   }
   return NULL;
@@ -119,12 +148,21 @@ void* terminal_thread_fn(void* opaque)
 
 int main(int argc, char** argv)
 {
+  // Temporary workaround for tests
+#if 0
+  extern void test_wsat_decoder();
+  test_wsat_decoder();
+  return 0;
+#endif
   pthread_t terminal_thread;
   pthread_create(&terminal_thread, NULL, terminal_thread_fn, NULL);
+  wsat_init();
   wsat_mic_set(&mic);
   wsat_snd_set(&snd);
+  wsat_wake_set(&wake);
   wsat_run();
   pthread_join(terminal_thread, NULL);
+  wsat_destroy();
 }
 
 void debug_print(char type, const char* format, ...)
