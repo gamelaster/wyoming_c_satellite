@@ -143,6 +143,7 @@ int32_t wsat_server_run()
     server->connfd = connfd;
     PLAT_MUTEX_UNLOCK(&server->state_mutex);
     wsat_event_decoder_reset(dec);
+    server->read_timeouts = 0;
 
     wsat_sys_event_broadcast(WSAT_SYS_EVENT_SAT_CONNECT, NULL);
 
@@ -162,7 +163,22 @@ int32_t wsat_server_run()
         break;
       }
       if (is_stop_requested()) break;
-      if (res == 0 || !FD_ISSET(connfd, &read_fds)) continue;
+      if (res == 0 || !FD_ISSET(connfd, &read_fds)) {
+        /**
+         * In HA, when Wyoming satellite is disabled, removed or muted,
+         * server will send pause-satellite and disable pings.
+         * After unmute, it destroys current socket and makes new connection.
+         * This does not happen when satellite is disabled.
+         * This simple timeout thing will drop socket if any packet didn't arrived for some time
+         * + it does not need any platform time_get API.
+         **/
+        server->read_timeouts++;
+        if (server->read_timeouts > 30) {
+          break;
+        }
+        continue;
+      }
+      server->read_timeouts = 0;
       // We received data!
       uint8_t* read_buffer;
       uint32_t capacity = wsat_event_decoder_buffer_get(dec, &read_buffer);

@@ -88,6 +88,7 @@ struct wsat_server
   bool stop_requested;
 
   struct wsat_event_decoder decoder;
+  uint16_t read_timeouts;
 };
 
 struct wsat_inst_priv
