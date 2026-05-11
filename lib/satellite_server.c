@@ -166,7 +166,6 @@ int32_t wsat_server_run()
       uint32_t capacity = wsat_event_decoder_buffer_get(dec, &read_buffer);
       const ssize_t bytes_read = read(connfd, read_buffer, capacity);
       if (bytes_read == 0) {
-        LOGD("Client disconnected");
         break;
       }
       if (bytes_read < 0) {
@@ -175,7 +174,7 @@ int32_t wsat_server_run()
           ret = 0;
           break;
         }
-        LOGD("read() failed: %d", errno);
+        LOGE("read() failed: %d", errno);
         ret = -WSAT_ERROR_SOCKET;
         break;
       }
@@ -200,6 +199,7 @@ int32_t wsat_server_run()
     close(connfd);
     server->connfd = connfd = -1;
     PLAT_MUTEX_UNLOCK(&server->state_mutex);
+    LOGD("Client disconnected");
     if (ret < 0) break;
   }
 

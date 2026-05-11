@@ -28,5 +28,4 @@ If not, just add it to the project according to the cJSON build instructions.
 - POSIX Sockets library - we need a way to host TCP server, for this, we need POSIX compatible library.
 On most of embedded systems, LwIP is used, which offers POSIX compatibility.
 - Dynamic Allocation functions - Even this is targeted to embedded systems, there is still need for dynamic memory
-allocation for receiving audio samples. It is recommended to have separate pool of memory for this. Additionally, cJSON
-uses malloc/free as well (can be overridden).
+allocation. It is recommended to have separate pool of memory for this. At the moment, only cJSON uses malloc/free (can be overridden).

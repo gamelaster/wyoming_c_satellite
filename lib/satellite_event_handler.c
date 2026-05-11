@@ -133,7 +133,7 @@ static int32_t handle_audio_start(struct wsat_decoded_event* evt)
 {
   // TODO: Maybe tell to SND more information about the length of incoming data.
   struct wsat_inst_priv* inst = &wsat_priv;
-  if (evt->data != NULL && inst->snd != NULL) {
+  if (evt->data != NULL && inst->snd != NULL && inst->snd->comp.sys_event_handle_fn != NULL) {
     struct wsat_sys_event_audio_start_params params;
     params.rate = (uint32_t)cJSON_GetNumberValue(cJSON_GetObjectItem(evt->data, "rate"));
     params.width = (uint8_t)cJSON_GetNumberValue(cJSON_GetObjectItem(evt->data, "width"));
@@ -146,7 +146,7 @@ static int32_t handle_audio_start(struct wsat_decoded_event* evt)
 static int32_t handle_audio_chunk(struct wsat_decoded_event* evt)
 {
   struct wsat_inst_priv* inst = &wsat_priv;
-  if (inst->snd != NULL) {
+  if (inst->snd != NULL && inst->snd->comp.sys_event_handle_fn != NULL) {
     struct wsat_sys_event_buffer_params params;
     params.data = evt->payload.data;
     params.size = evt->payload.size;
@@ -158,7 +158,7 @@ static int32_t handle_audio_chunk(struct wsat_decoded_event* evt)
 static int32_t handle_audio_stop(struct wsat_decoded_event* evt)
 {
   struct wsat_inst_priv* inst = &wsat_priv;
-  if (inst->snd != NULL) {
+  if (inst->snd != NULL && inst->snd->comp.sys_event_handle_fn != NULL) {
     inst->snd->comp.sys_event_handle_fn(WSAT_SYS_EVENT_SND_AUDIO_END, NULL);
   }
   return 0;

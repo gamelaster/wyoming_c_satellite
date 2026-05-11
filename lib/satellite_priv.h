@@ -36,7 +36,7 @@ enum wsat_packet_type
 
 struct wsat_mode
 {
-  struct wsat_component component;
+  struct wsat_component comp;
   enum wsat_mode_type type;
   int32_t (* event_handle_fn)(enum wsat_packet_type event_type, struct wsat_decoded_event* evt);
 };
@@ -118,15 +118,5 @@ uint32_t wsat_event_decoder_buffer_get(struct wsat_event_decoder* dec, uint8_t**
 void wsat_event_decoder_buffer_advance(struct wsat_event_decoder* dec, uint32_t length);
 int32_t wsat_event_decoder_next(struct wsat_event_decoder* dec, struct wsat_decoded_event* out_event);
 void wsat_decoded_event_free(struct wsat_decoded_event* evt);
-
-#if 0
-void wsat_process_data();
-void wsat_packet_handle(struct wsat_event pkt);
-int32_t wsat_packet_default_handle(enum wsat_packet_type packet_type, struct wsat_event pkt);
-int32_t wsat_send_run_pipeline(const char* pipeline_name);
-
-extern struct wsat_mode wsat_mode_always_stream;
-extern struct wsat_mode wsat_mode_wake_stream;
-#endif
 
 #endif

@@ -11,7 +11,7 @@ int32_t wsat_mic_write_data(uint8_t* data, uint32_t length)
     length
   };
   if (!wsat_server_client_connected()) return -WSAT_ERROR_SAT_DISCONNECTED;
-  inst->mode->component.sys_event_handle_fn(WSAT_SYS_EVENT_MIC_DATA, &arg);
+  inst->mode->comp.sys_event_handle_fn(WSAT_SYS_EVENT_MIC_DATA, &arg);
   return WSAT_OK;
 }
 
@@ -20,6 +20,7 @@ int32_t wsat_wake_detection()
   struct wsat_inst_priv* inst = &wsat_priv;
   if (!wsat_server_client_connected()) return -WSAT_ERROR_SAT_DISCONNECTED;
   // TODO: Send to every component?
-  inst->mode->component.sys_event_handle_fn(WSAT_SYS_EVENT_WAKE_DETECTION, NULL);
+  inst->mode->comp.sys_event_handle_fn(WSAT_SYS_EVENT_WAKE_DETECTION, NULL);
+  return WSAT_OK;
   return WSAT_OK;
 }
