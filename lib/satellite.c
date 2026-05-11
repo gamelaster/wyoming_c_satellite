@@ -132,13 +132,19 @@ int32_t wsat_run_pipeline_send(const char* pipeline_name)
 
   cJSON* header = cJSON_CreateObject();
   cJSON_AddStringToObject(header, "type", "run-pipeline");
-  cJSON_AddStringToObject(header, "version", "1.5.2");
+  cJSON_AddStringToObject(header, "version", "1.5.4");
 
   cJSON* data = cJSON_CreateObject();
   if (pipeline_name != NULL) cJSON_AddStringToObject(data, "name", pipeline_name);
   cJSON_AddStringToObject(data, "start_stage", start_stage);
   cJSON_AddStringToObject(data, "end_stage", end_stage);
   cJSON_AddBoolToObject(data, "restart_on_end", restart_on_end);
+
+  cJSON* snd_format_data = cJSON_CreateObject();
+  cJSON_AddNumberToObject(snd_format_data, "rate", inst->mic->rate);
+  cJSON_AddNumberToObject(snd_format_data, "width", inst->mic->width);
+  cJSON_AddNumberToObject(snd_format_data, "channels", inst->mic->channels);
+  cJSON_AddItemToObject(data, "snd_format", snd_format_data);
 
   struct wsat_event res_pkt = {
     .header = header,
