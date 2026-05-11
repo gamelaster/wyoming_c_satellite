@@ -144,6 +144,8 @@ int32_t wsat_server_run()
     PLAT_MUTEX_UNLOCK(&server->state_mutex);
     wsat_event_decoder_reset(dec);
 
+    wsat_sys_event_broadcast(WSAT_SYS_EVENT_SAT_CONNECT, NULL);
+
     while (true) {
       FD_ZERO(&read_fds);
       FD_SET(connfd, &read_fds);
@@ -200,6 +202,7 @@ int32_t wsat_server_run()
     server->connfd = connfd = -1;
     PLAT_MUTEX_UNLOCK(&server->state_mutex);
     LOGD("Client disconnected");
+    wsat_sys_event_broadcast(WSAT_SYS_EVENT_SAT_DISCONNECT, NULL);
     if (ret < 0) break;
   }
 

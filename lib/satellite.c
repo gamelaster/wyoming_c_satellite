@@ -54,6 +54,7 @@ int32_t wsat_run()
   inst->components[1] = (struct wsat_component*)inst->snd;
   inst->components[2] = (struct wsat_component*)inst->mic;
   inst->components[3] = (struct wsat_component*)inst->wake;
+  inst->components[4] = (struct wsat_component*)inst->fback;
   for (int i = 0; i < ARRAY_LENGTH(inst->components); i++) {
     struct wsat_component* comp = inst->components[i];
     if (comp != NULL && comp->init_fn != NULL && !comp->is_init) {
@@ -95,6 +96,12 @@ void wsat_wake_set(struct wsat_wake* wake)
 {
   struct wsat_inst_priv* inst = &wsat_priv;
   inst->wake = wake;
+}
+
+void wsat_fback_set(struct wsat_feedback* fback)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  inst->fback = fback;
 }
 
 void wsat_stop()

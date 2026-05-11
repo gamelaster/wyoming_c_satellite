@@ -133,6 +133,7 @@ static int32_t handle_audio_start(struct wsat_decoded_event* evt)
 {
   // TODO: Maybe tell to SND more information about the length of incoming data.
   struct wsat_inst_priv* inst = &wsat_priv;
+  WSAT_COMP_SYS_EVENT_SEND(inst->fback, WSAT_SYS_EVENT_SND_AUDIO_START, NULL);
   if (evt->data != NULL && inst->snd != NULL && inst->snd->comp.sys_event_handle_fn != NULL) {
     struct wsat_sys_event_audio_start_params params;
     params.rate = (uint32_t)cJSON_GetNumberValue(cJSON_GetObjectItem(evt->data, "rate"));
@@ -158,6 +159,7 @@ static int32_t handle_audio_chunk(struct wsat_decoded_event* evt)
 static int32_t handle_audio_stop(struct wsat_decoded_event* evt)
 {
   struct wsat_inst_priv* inst = &wsat_priv;
+  WSAT_COMP_SYS_EVENT_SEND(inst->fback, WSAT_SYS_EVENT_SND_AUDIO_END, NULL);
   if (inst->snd != NULL && inst->snd->comp.sys_event_handle_fn != NULL) {
     inst->snd->comp.sys_event_handle_fn(WSAT_SYS_EVENT_SND_AUDIO_END, NULL);
   }
@@ -177,6 +179,13 @@ static int32_t handle_error(struct wsat_decoded_event* evt)
   return 0;
 }
 
+static int32_t handle_voice_stopped(struct wsat_decoded_event* evt)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  WSAT_COMP_SYS_EVENT_SEND(inst->fback, WSAT_SYS_EVENT_VOICE_STOP, NULL);
+  return 0;
+}
+
 struct packet_handler
 {
   enum wsat_packet_type type;
@@ -189,7 +198,7 @@ struct packet_handler
   { WSAT_EVENT_TYPE_AUDIO_STOP,    handle_audio_stop },
   { WSAT_EVENT_TYPE_ERROR,         handle_error },
   // { WSAT_EVENT_TYPE_DETECTION,     handle_detection },
-  // { WSAT_EVENT_TYPE_VOICE_STOPPED, handle_voice_stopped }
+  { WSAT_EVENT_TYPE_VOICE_STOPPED, handle_voice_stopped }
 };
 
 int32_t wsat_event_handle_default(enum wsat_packet_type packet_type, struct wsat_decoded_event* evt)

@@ -12,6 +12,10 @@
 
 #define ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
+#define WSAT_COMP_SYS_EVENT_SEND(obj, event, arg)                    \
+  if ((obj) != NULL && (obj)->comp.is_init && (obj)->comp.sys_event_handle_fn != NULL) \
+    (obj)->comp.sys_event_handle_fn((event), (arg))
+
 enum wsat_mode_type
 {
   WSAT_MODE_ALWAYS_STREAM,
@@ -97,11 +101,12 @@ struct wsat_inst_priv
     struct wsat_mode_wake_stream_inst wake_stream;
   } mode_inst;
 
-  struct wsat_component* components[4];
+  struct wsat_component* components[5];
 
   struct wsat_microphone* mic;
   struct wsat_sound* snd;
   struct wsat_wake* wake;
+  struct wsat_feedback* fback;
 };
 
 extern struct wsat_inst_priv wsat_priv;
@@ -112,6 +117,8 @@ int32_t wsat_audio_chunk_send(uint8_t* data, uint32_t length);
 
 void wsat_event_handle(struct wsat_decoded_event* evt);
 int32_t wsat_event_handle_default(enum wsat_packet_type packet_type, struct wsat_decoded_event* evt);
+
+int32_t wsat_sys_event_broadcast(enum wsat_sys_event_type type, void* data);
 
 void wsat_event_decoder_reset(struct wsat_event_decoder* dec);
 uint32_t wsat_event_decoder_buffer_get(struct wsat_event_decoder* dec, uint8_t** buffer);

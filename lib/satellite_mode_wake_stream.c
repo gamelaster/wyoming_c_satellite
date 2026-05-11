@@ -107,8 +107,9 @@ static int32_t wsat_mode_event_handle(enum wsat_packet_type event_type, struct w
     res = 1;
     break;
   }
-  case WSAT_EVENT_TYPE_TRANSCRIPT:
-  case WSAT_EVENT_TYPE_ERROR: {
+  case WSAT_EVENT_TYPE_ERROR:
+    WSAT_COMP_SYS_EVENT_SEND(inst->fback, WSAT_SYS_EVENT_ERROR, NULL); // TODO: Maybe send after is_streaming is cleared
+  case WSAT_EVENT_TYPE_TRANSCRIPT: {
     PLAT_MUTEX_LOCK(&mode_inst->state_mutex);
     mode_inst->is_streaming = false;
     PLAT_MUTEX_UNLOCK(&mode_inst->state_mutex);

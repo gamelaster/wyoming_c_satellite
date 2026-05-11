@@ -25,6 +25,7 @@ enum wsat_component_type
   WSAT_COMPONENT_TYPE_MICROPHONE,
   WSAT_COMPONENT_TYPE_SOUND,
   WSAT_COMPONENT_TYPE_WAKE,
+  WSAT_COMPONENT_TYPE_FEEDBACK,
 };
 
 struct wsat_decoded_event
@@ -64,6 +65,8 @@ enum wsat_sys_event_type
   WSAT_SYS_EVENT_SND_AUDIO_DATA,
   WSAT_SYS_EVENT_SND_AUDIO_END,
   WSAT_SYS_EVENT_WAKE_DETECTION,
+  WSAT_SYS_EVENT_VOICE_STOP,
+  WSAT_SYS_EVENT_ERROR,
 };
 
 struct wsat_sys_event_buffer_params
@@ -108,6 +111,11 @@ struct wsat_wake
   const char* name;
 };
 
+struct wsat_feedback
+{
+  struct wsat_component comp;
+};
+
 int32_t wsat_init();
 void wsat_destroy();
 int32_t wsat_run();
@@ -115,6 +123,7 @@ void wsat_stop();
 void wsat_mic_set(struct wsat_microphone* mic);
 void wsat_snd_set(struct wsat_sound* snd);
 void wsat_wake_set(struct wsat_wake* wake);
+void wsat_fback_set(struct wsat_feedback* fback);
 int32_t wsat_mic_write_data(uint8_t* data, uint32_t length);
 int32_t wsat_wake_detection();
 bool wsat_server_client_connected();
