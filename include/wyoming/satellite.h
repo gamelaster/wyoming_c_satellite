@@ -115,9 +115,9 @@ void wsat_stop();
 void wsat_mic_set(struct wsat_microphone* mic);
 void wsat_snd_set(struct wsat_sound* snd);
 void wsat_wake_set(struct wsat_wake* wake);
-void wsat_mic_write_data(uint8_t* data, uint32_t length);
-bool wsat_server_is_connected();
-void wsat_wake_detection();
+int32_t wsat_mic_write_data(uint8_t* data, uint32_t length);
+int32_t wsat_wake_detection();
+bool wsat_server_client_connected();
 
 int32_t wsat_event_send(struct wsat_event* evt);
 void wsat_event_free(struct wsat_event* evt, bool free_payload);

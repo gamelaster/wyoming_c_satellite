@@ -326,3 +326,13 @@ void wsat_event_free(struct wsat_event* evt, bool free_payload)
   if (evt->data != NULL) cJSON_Delete(evt->data);
   if (free_payload && evt->payload != NULL) free(evt->payload);
 }
+
+bool wsat_server_client_connected()
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  struct wsat_server* server = &inst->server;
+  PLAT_MUTEX_LOCK(&server->state_mutex);
+  bool connected = server->connfd >= 0 && !server->stop_requested;
+  PLAT_MUTEX_UNLOCK(&server->state_mutex);
+  return connected;
+}
