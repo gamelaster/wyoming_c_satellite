@@ -84,14 +84,14 @@ static int32_t handle_describe(struct wsat_decoded_event* evt)
   cJSON_AddItemToObject(data, "wake", wake_array);
 
   cJSON* satellite_obj = cJSON_CreateObject();
-  cJSON_AddStringToObject(satellite_obj, "name", "Wyoming C Satellite");
+  cJSON_AddStringToObject(satellite_obj, "name", inst->settings[WSAT_SETTING_TYPE_SATELLITE_NAME]);
   cJSON* attribution_obj = cJSON_CreateObject();
   cJSON_AddStringToObject(attribution_obj, "name", "");
   cJSON_AddStringToObject(attribution_obj, "url", "");
   cJSON_AddItemToObject(satellite_obj, "attribution", attribution_obj);
   cJSON_AddTrueToObject(satellite_obj, "installed");
   cJSON_AddStringToObject(satellite_obj, "description", "my satellite");
-  cJSON_AddStringToObject(satellite_obj, "version", "1.0.0");
+  cJSON_AddStringToObject(satellite_obj, "version", inst->settings[WSAT_SETTING_TYPE_SATELLITE_VERSION]);
   cJSON_AddNullToObject(satellite_obj, "area");
   cJSON_AddNullToObject(satellite_obj, "snd_format");
   cJSON_AddItemToObject(data, "satellite", satellite_obj);

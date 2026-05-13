@@ -28,6 +28,13 @@ enum wsat_component_type
   WSAT_COMPONENT_TYPE_FEEDBACK,
 };
 
+enum wsat_setting_type
+{
+  WSAT_SETTING_TYPE_SATELLITE_NAME,
+  WSAT_SETTING_TYPE_SATELLITE_VERSION,
+  WSAT_SETTING_TYPE_MAX,
+};
+
 struct wsat_decoded_event
 {
   uint8_t flags; // enum wsat_decoded_event_flags
@@ -118,6 +125,7 @@ struct wsat_feedback
 
 int32_t wsat_init();
 void wsat_destroy();
+void wsat_settings_set(enum wsat_setting_type type, void* value);
 int32_t wsat_run();
 void wsat_stop();
 void wsat_mic_set(struct wsat_microphone* mic);

@@ -94,6 +94,7 @@ struct wsat_server
 struct wsat_inst_priv
 {
   struct wsat_server server;
+  void* settings[WSAT_SETTING_TYPE_MAX];
 
   struct wsat_mode* mode;
   union

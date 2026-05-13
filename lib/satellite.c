@@ -28,6 +28,8 @@ int32_t wsat_init()
   server->sockfd = -1;
   PLAT_MUTEX_CREATE(&server->state_mutex); // TODO: Error check
   PLAT_MUTEX_CREATE(&server->send_mutex); // TODO: Error check
+  inst->settings[WSAT_SETTING_TYPE_SATELLITE_NAME] = "Wyoming C Satellite";
+  inst->settings[WSAT_SETTING_TYPE_SATELLITE_VERSION] = "1.0.0";
   return 0;
 }
 
@@ -37,6 +39,12 @@ void wsat_destroy()
   struct wsat_server* server = &inst->server;
   PLAT_MUTEX_DESTROY(&server->send_mutex);
   PLAT_MUTEX_DESTROY(&server->state_mutex);
+}
+
+void wsat_settings_set(enum wsat_setting_type type, void* value)
+{
+  struct wsat_inst_priv* inst = &wsat_priv;
+  inst->settings[type] = value;
 }
 
 int32_t wsat_run()
